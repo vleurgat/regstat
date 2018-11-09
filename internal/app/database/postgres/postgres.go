@@ -8,7 +8,7 @@ import (
 	"github.com/vleurgat/regstat/internal/app/database"
 )
 
-// Database is an implementation of Database for Postgres.
+// Database is an implementation of database.Database for Postgres.
 type Database struct {
 	conn *sqlx.DB
 }
