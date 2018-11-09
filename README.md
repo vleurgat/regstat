@@ -146,7 +146,14 @@ notifications:
 
 ## Building RegStat
 
+Linux static binary ...
 ````
 $ go get github.com/vleurgat/regstat/cmd/regstat
-$ CGO_ENABLED=0 go install -a -ldflags '-extldflags "-static"' github.com/vleurgat/regstat/cmd/regstat
+$ CGO_ENABLED=0 go install -a -ldflags '-extldflags="-static"' github.com/vleurgat/regstat/cmd/regstat
+````
+
+Windows ...
+````
+C:\> go get github.com/vleurgat/regstat/cmd/regstat
+C:\> go install -a github.com/vleurgat/regstat/cmd/regstat
 ````
