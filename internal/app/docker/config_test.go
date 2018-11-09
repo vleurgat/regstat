@@ -12,7 +12,6 @@ func createTempFile(t *testing.T) *os.File {
 	if err != nil {
 		t.Fatal("failed to create temp file", err)
 	}
-	defer os.Remove(file.Name())
 	return file
 }
 
@@ -22,12 +21,13 @@ func TestCreateConfig(t *testing.T) {
 		if err == nil || cfg != nil {
 			t.Error("expected error and nil config")
 		}
-		if !strings.Contains(err.Error(), "cannot find the file") {
-			t.Errorf("expected cannot find the file; got %s", err)
+		if !strings.Contains(err.Error(), "no-such-file") {
+			t.Errorf("expected no-such-file; got %s", err)
 		}
 	})
 	t.Run("bad json", func(t *testing.T) {
 		file := createTempFile(t)
+		defer os.Remove(file.Name())
 		content := []byte("rubbish")
 		file.Write(content)
 		cfg, err := CreateConfig(file.Name())
@@ -40,6 +40,7 @@ func TestCreateConfig(t *testing.T) {
 	})
 	t.Run("empty json", func(t *testing.T) {
 		file := createTempFile(t)
+		defer os.Remove(file.Name())
 		content := []byte("{}")
 		file.Write(content)
 		cfg, err := CreateConfig(file.Name())
@@ -52,6 +53,7 @@ func TestCreateConfig(t *testing.T) {
 	})
 	t.Run("valid json", func(t *testing.T) {
 		file := createTempFile(t)
+		defer os.Remove(file.Name())
 		content := []byte("{\"auths\":{\"reg1\": {\"auth\":\"token\"}}}")
 		file.Write(content)
 		cfg, err := CreateConfig(file.Name())

@@ -10,16 +10,23 @@ import (
 	"github.com/vleurgat/regstat/internal/app/registry"
 )
 
-// Workflow encapsulates the business logic of how Docker registry
+// Workflow defines the main registry notification event processing methods.
+type Workflow interface {
+	processDelete(event *notifications.Event)
+	processPush(event *notifications.Event)
+	processPull(event *notifications.Event)
+}
+
+// WorkflowImpl encapsulates the business logic of how Docker registry
 // notifications of tag, manifest and blob pulls, pushes and deletes
-// should be intrepreted and persisted.
-type Workflow struct {
-	db     *database.Database
+// should be intrepreted and persisted. It implements the Workflow interface.
+type WorkflowImpl struct {
+	db     database.Database
 	client registry.Client
 	eqr    *registry.EquivRegistries
 }
 
-func (wf *Workflow) createBlob(event *notifications.Event) database.Blob {
+func createBlob(event *notifications.Event) database.Blob {
 	return database.Blob{
 		Digest: event.Target.Digest.String(),
 		Pushed: event.Timestamp,
@@ -27,7 +34,7 @@ func (wf *Workflow) createBlob(event *notifications.Event) database.Blob {
 	}
 }
 
-func (wf *Workflow) createManifest(event *notifications.Event) database.Manifest {
+func createManifest(event *notifications.Event) database.Manifest {
 	manifest := database.Manifest{
 		Digest: event.Target.Digest.String(),
 		Pushed: event.Timestamp,
@@ -36,7 +43,7 @@ func (wf *Workflow) createManifest(event *notifications.Event) database.Manifest
 	return manifest
 }
 
-func (wf *Workflow) appendBlob(manifest *database.Manifest, digest string, timestamp time.Time) {
+func appendBlob(manifest *database.Manifest, digest string, timestamp time.Time) {
 	manifest.Blobs = append(manifest.Blobs,
 		database.Blob{
 			Digest: digest,
@@ -45,8 +52,8 @@ func (wf *Workflow) appendBlob(manifest *database.Manifest, digest string, times
 		})
 }
 
-func (wf *Workflow) createTag(event *notifications.Event, manifest *database.Manifest) database.Tag {
-	name := wf.eqr.FindEquivalent(event.Request.Host) + "/" + event.Target.Repository
+func createTag(event *notifications.Event, manifest *database.Manifest, eqr *registry.EquivRegistries) database.Tag {
+	name := eqr.FindEquivalent(event.Request.Host) + "/" + event.Target.Repository
 	if event.Target.Tag != "" {
 		name += ":" + event.Target.Tag
 	}
@@ -61,16 +68,16 @@ func (wf *Workflow) createTag(event *notifications.Event, manifest *database.Man
 	}
 }
 
-func (wf *Workflow) enrichManifest(manifest *database.Manifest, v2Manifest *schema2.Manifest, timestamp time.Time) {
+func enrichManifest(manifest *database.Manifest, v2Manifest *schema2.Manifest, timestamp time.Time) {
 	if v2Manifest.Config.Digest != "" {
-		wf.appendBlob(manifest, v2Manifest.Config.Digest.String(), timestamp)
+		appendBlob(manifest, v2Manifest.Config.Digest.String(), timestamp)
 	}
 	for _, layer := range v2Manifest.Layers {
-		wf.appendBlob(manifest, layer.Digest.String(), timestamp)
+		appendBlob(manifest, layer.Digest.String(), timestamp)
 	}
 }
 
-func (wf *Workflow) processDelete(event *notifications.Event) {
+func (wf WorkflowImpl) processDelete(event *notifications.Event) {
 	// for delete events we need to lookup whether the digest refers to a blob or a manifest
 	if wf.db.IsManifest(event.Target.Digest.String()) {
 		wf.db.DeleteManifest(event.Target.Digest.String())
@@ -81,17 +88,17 @@ func (wf *Workflow) processDelete(event *notifications.Event) {
 	}
 }
 
-func (wf *Workflow) processPull(event *notifications.Event) {
+func (wf WorkflowImpl) processPull(event *notifications.Event) {
 	switch event.Target.MediaType {
 	case "application/octet-stream",
 		"application/vnd.docker.image.rootfs.diff.tar.gzip":
 		// blob
-		blob := wf.createBlob(event)
+		blob := createBlob(event)
 		wf.db.PullBlob(&blob)
 	case "application/vnd.docker.distribution.manifest.v2+json":
 		// manifest
-		manifest := wf.createManifest(event)
-		tag := wf.createTag(event, &manifest)
+		manifest := createManifest(event)
+		tag := createTag(event, &manifest, wf.eqr)
 		if tag.Tag == "" {
 			// the tag will be missing on the response to a pull of a manifest by
 			// digest; that usually only happens for technical reasons - e.g. when
@@ -107,20 +114,20 @@ func (wf *Workflow) processPull(event *notifications.Event) {
 	}
 }
 
-func (wf *Workflow) processPush(event *notifications.Event) {
+func (wf WorkflowImpl) processPush(event *notifications.Event) {
 	switch event.Target.MediaType {
 	case "application/octet-stream",
 		"application/vnd.docker.image.rootfs.diff.tar.gzip":
 		// blob
-		blob := wf.createBlob(event)
+		blob := createBlob(event)
 		wf.db.PushBlob(&blob)
 	case "application/vnd.docker.distribution.manifest.v2+json":
 		// manifest
-		manifest := wf.createManifest(event)
-		tag := wf.createTag(event, &manifest)
+		manifest := createManifest(event)
+		tag := createTag(event, &manifest, wf.eqr)
 		manifestJSON, err := wf.client.GetV2Manifest(event.Target.URL)
 		if err == nil {
-			wf.enrichManifest(&manifest, &manifestJSON, event.Timestamp)
+			enrichManifest(&manifest, &manifestJSON, event.Timestamp)
 		}
 		wf.db.PushManifest(&manifest)
 		wf.db.PushTag(&tag)

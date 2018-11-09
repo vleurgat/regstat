@@ -10,25 +10,24 @@ import (
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/distribution/notifications"
 	_ "github.com/lib/pq" // import Postgres driver
-	"github.com/vleurgat/regstat/internal/app/database"
-	"github.com/vleurgat/regstat/internal/app/docker"
+		"github.com/vleurgat/regstat/internal/app/docker"
 	"github.com/vleurgat/regstat/internal/app/registry"
+	"github.com/vleurgat/regstat/internal/app/database/postgres"
 )
 
 type server struct {
 	httpServer *http.Server
-	db         *database.Database
-	client     registry.Client
-	eqr        *registry.EquivRegistries
+	workflow   Workflow
 }
 
 func newServer(port string, pgConnStr string, dockerConfig *configfile.ConfigFile, equivRegistries *registry.EquivRegistries) *server {
 	s := server{}
-	s.db = &database.Database{PgConnStr: pgConnStr}
-	s.db.ConnectToDb()
-	s.client = registry.CreateClient(dockerConfig)
 	s.httpServer = &http.Server{Addr: ":" + port, Handler: http.HandlerFunc(s.handle)}
-	s.eqr = equivRegistries
+	db := postgres.CreateDatabase(pgConnStr)
+	db.CreateSchemaIfNecessary()
+	client := registry.CreateClient(dockerConfig)
+	eqr := equivRegistries
+	s.workflow = WorkflowImpl{db: db, client: client, eqr: eqr}
 	return &s
 }
 
@@ -62,16 +61,15 @@ func (s *server) processRegistryRequest(body []byte) error {
 		log.Println("json unmarshal error", err)
 		return err
 	}
-	wf := Workflow{db: s.db, client: s.client, eqr: s.eqr}
 	for _, event := range request.Events {
-		log.Println("event", event.Action)
+		log.Printf("event: %s\n", event.Action)
 		switch event.Action {
 		case "delete":
-			wf.processDelete(&event)
+			s.workflow.processDelete(&event)
 		case "pull":
-			wf.processPull(&event)
+			s.workflow.processPull(&event)
 		case "push":
-			wf.processPush(&event)
+			s.workflow.processPush(&event)
 		default:
 			log.Println("unknown event action", event.Action)
 		}

@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-)
+	"strconv"
+	)
 
 func parseBearer(suffix string) map[string]string {
 	kv := make(map[string]string)
@@ -68,7 +69,7 @@ func (c *Client) getDockerBearerAuth(response *http.Response, basicAuth string) 
 		return "", err
 	}
 	if response.StatusCode != 200 {
-		return "", errors.New("failed to determine the bearer token - status code is " + string(response.StatusCode))
+		return "", errors.New("failed to determine the bearer token - status code is " + strconv.Itoa(response.StatusCode))
 	}
 	return extractBearerToken(response)
 }

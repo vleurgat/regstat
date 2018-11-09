@@ -10,11 +10,11 @@ import (
 func TestFindEquivalent(t *testing.T) {
 	eqv := EquivRegistries{
 		Equivs: map[string][]string{
-			"hello": []string{
+			"hello": {
 				"bonjour",
 				"hi",
 			},
-			"thanks": []string{
+			"thanks": {
 				"cheers",
 			},
 		},
@@ -38,7 +38,6 @@ func createTempFile(t *testing.T) *os.File {
 	if err != nil {
 		t.Fatal("failed to create temp file", err)
 	}
-	defer os.Remove(file.Name())
 	return file
 }
 
@@ -46,19 +45,20 @@ func TestCreateEquivRegistries(t *testing.T) {
 	t.Run("no file", func(t *testing.T) {
 		eqr, err := CreateEquivRegistries("no-such-file")
 		if err == nil || eqr != nil {
-			t.Error("expected error and nil equiv registry")
+			t.Fatal("expected error and nil equiv registry")
 		}
-		if !strings.Contains(err.Error(), "cannot find the file") {
-			t.Errorf("expected cannot find the file; got %s", err)
+		if !strings.Contains(err.Error(), "no-such-file") {
+			t.Errorf("expected no-such-file; got %s", err)
 		}
 	})
 	t.Run("bad json", func(t *testing.T) {
 		file := createTempFile(t)
+		defer os.Remove(file.Name())
 		content := []byte("rubbish")
 		file.Write(content)
 		eqr, err := CreateEquivRegistries(file.Name())
 		if err == nil || eqr != nil {
-			t.Error("expected error and nil equiv registry")
+			t.Fatal("expected error and nil equiv registry")
 		}
 		if !strings.Contains(err.Error(), "invalid character") {
 			t.Errorf("expected invalid char error; got %s", err)
@@ -66,11 +66,12 @@ func TestCreateEquivRegistries(t *testing.T) {
 	})
 	t.Run("empty json", func(t *testing.T) {
 		file := createTempFile(t)
+		defer os.Remove(file.Name())
 		content := []byte("{}")
 		file.Write(content)
 		eqr, err := CreateEquivRegistries(file.Name())
 		if eqr == nil || err != nil {
-			t.Error("expected equiv registry and nil error")
+			t.Fatalf("expected equiv registry and nil error; got %s", err)
 		}
 		if len(eqr.Equivs) != 0 {
 			t.Errorf("expected no equivs; got %d", len(eqr.Equivs))
@@ -78,11 +79,12 @@ func TestCreateEquivRegistries(t *testing.T) {
 	})
 	t.Run("valid json", func(t *testing.T) {
 		file := createTempFile(t)
+		defer os.Remove(file.Name())
 		content := []byte("{\"one\":[\"oneA\", \"oneB\"]}")
 		file.Write(content)
 		eqr, err := CreateEquivRegistries(file.Name())
 		if eqr == nil || err != nil {
-			t.Error("expected equiv registry and nil error")
+			t.Fatalf("expected equiv registry and nil error; got %s", err)
 		}
 		if len(eqr.Equivs) != 1 {
 			t.Errorf("expected 1 equiv; got %d", len(eqr.Equivs))

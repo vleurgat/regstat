@@ -1,8 +1,6 @@
 package database
 
-import (
-	"time"
-)
+import "time"
 
 // Blob representation in the database.
 type Blob struct {
@@ -32,4 +30,19 @@ type Tag struct {
 	Manifest   Manifest
 	Pushed     time.Time
 	Pulled     time.Time
+}
+
+// Database operations.
+type Database interface {
+	CreateSchemaIfNecessary()
+	IsBlob(digest string) bool
+	PushBlob(blob *Blob)
+	PullBlob(blob *Blob)
+	DeleteBlob(digest string)
+	IsManifest(digest string) bool
+	PushManifest(manifest *Manifest)
+	PullManifest(manifest *Manifest)
+	DeleteManifest(digest string)
+	PushTag(tag *Tag)
+	PullTag(tag *Tag)
 }
