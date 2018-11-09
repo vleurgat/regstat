@@ -5,9 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/docker/cli/cli/config/configfile"
-	"io/ioutil"
 	"errors"
+	"io/ioutil"
+
+	"github.com/docker/cli/cli/config/configfile"
 )
 
 func TestParseBearer(t *testing.T) {
@@ -40,8 +41,7 @@ func TestParseBearer(t *testing.T) {
 func TestGetBrearerAuthURL(t *testing.T) {
 	t.Run("no header", func(t *testing.T) {
 		response := &http.Response{
-			Header: map[string][]string{
-			},
+			Header: map[string][]string{},
 		}
 		url, err := getBrearerAuthURL(response)
 		if url != "" || err == nil {
@@ -113,7 +113,7 @@ func TestExtractBearerToken(t *testing.T) {
 }
 
 func TestGetDockerBearerAuth(t *testing.T) {
-	httpClient := MockHttpClient{}
+	httpClient := MockHTTPClient{}
 	client := Client{client: httpClient, dockerConfig: &configfile.ConfigFile{}}
 
 	t.Run("no bearer auth url", func(t *testing.T) {
@@ -145,7 +145,7 @@ func TestGetDockerBearerAuth(t *testing.T) {
 	})
 
 	t.Run("http Do error", func(t *testing.T) {
-		httpClient := CreateMockHttpClientErr(errors.New("oops"))
+		httpClient := CreateMockHTTPClientErr(errors.New("oops"))
 		client = Client{client: httpClient, dockerConfig: &configfile.ConfigFile{}}
 		res := &http.Response{
 			Header: map[string][]string{
@@ -164,7 +164,7 @@ func TestGetDockerBearerAuth(t *testing.T) {
 	})
 
 	t.Run("http non 200", func(t *testing.T) {
-		httpClient := CreateMockHttpClient(http.Response{StatusCode: 500})
+		httpClient := CreateMockHTTPClient(http.Response{StatusCode: 500})
 		client = Client{client: httpClient, dockerConfig: &configfile.ConfigFile{}}
 		res := &http.Response{
 			Header: map[string][]string{
@@ -183,7 +183,7 @@ func TestGetDockerBearerAuth(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		httpClient := CreateMockHttpClient(http.Response{
+		httpClient := CreateMockHTTPClient(http.Response{
 			StatusCode: 200,
 			Body:       ioutil.NopCloser(strings.NewReader("{\"token\":\"my-token\"}")),
 		})

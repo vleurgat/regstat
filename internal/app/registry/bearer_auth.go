@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"strings"
 	"strconv"
-	)
+	"strings"
+)
 
 func parseBearer(suffix string) map[string]string {
 	kv := make(map[string]string)

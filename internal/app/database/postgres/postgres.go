@@ -3,11 +3,12 @@ package postgres
 import (
 	"log"
 	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/vleurgat/regstat/internal/app/database"
 )
 
-// Database: implementation of Database for Postgres.
+// Database is an implementation of Database for Postgres.
 type Database struct {
 	conn *sqlx.DB
 }
@@ -26,6 +27,7 @@ func CreateDatabase(pgConnStr string) database.Database {
 	}
 }
 
+// CreateSchemaIfNecessary does what it says on the tin.
 func (db Database) CreateSchemaIfNecessary() {
 	var schemaExists bool
 	var tableExists bool
@@ -65,11 +67,11 @@ func (db Database) IsBlob(digest string) bool {
 func (db Database) PushBlob(blob *database.Blob) {
 	tx := db.conn.MustBegin()
 	tx.MustExec("INSERT INTO regstat.blobs "+
-			"(digest, pushed) "+
-			"VALUES ($1, $2) "+
-			"ON CONFLICT (digest) "+
-			"DO UPDATE SET "+
-			"pushed = $2",
+		"(digest, pushed) "+
+		"VALUES ($1, $2) "+
+		"ON CONFLICT (digest) "+
+		"DO UPDATE SET "+
+		"pushed = $2",
 		blob.Digest, blob.Pushed)
 	tx.Commit()
 	log.Println("push blob", blob.Digest)
@@ -85,11 +87,11 @@ func (db Database) PullBlob(blob *database.Blob) {
 
 func pullBlob(blob *database.Blob, tx *sqlx.Tx) {
 	tx.MustExec("INSERT INTO regstat.blobs "+
-			"(digest, pushed, pulled) "+
-			"VALUES ($1, $2, $3) "+
-			"ON CONFLICT (digest) "+
-			"DO UPDATE SET "+
-			"pulled = $3",
+		"(digest, pushed, pulled) "+
+		"VALUES ($1, $2, $3) "+
+		"ON CONFLICT (digest) "+
+		"DO UPDATE SET "+
+		"pulled = $3",
 		blob.Digest, blob.Pushed, blob.Pulled)
 }
 
@@ -97,23 +99,23 @@ func pullBlob(blob *database.Blob, tx *sqlx.Tx) {
 func (db Database) DeleteBlob(digest string) {
 	tx := db.conn.MustBegin()
 	tx.MustExec("INSERT INTO regstat.deleted_blobs "+
-			"SELECT digest, pushed, pulled, NOW() FROM regstat.blobs "+
-			"WHERE digest = $1 "+
-			"ON CONFLICT (digest) "+
-			"DO UPDATE SET "+
-			"deleted = NOW()",
+		"SELECT digest, pushed, pulled, NOW() FROM regstat.blobs "+
+		"WHERE digest = $1 "+
+		"ON CONFLICT (digest) "+
+		"DO UPDATE SET "+
+		"deleted = NOW()",
 		digest)
 	tx.MustExec("INSERT INTO regstat.deleted_manifest_blob "+
-			"SELECT manifest_digest, blob_digest FROM regstat.manifest_blob "+
-			"WHERE blob_digest = $1 "+
-			"ON CONFLICT (manifest_digest, blob_digest) "+
-			"DO NOTHING",
+		"SELECT manifest_digest, blob_digest FROM regstat.manifest_blob "+
+		"WHERE blob_digest = $1 "+
+		"ON CONFLICT (manifest_digest, blob_digest) "+
+		"DO NOTHING",
 		digest)
 	tx.MustExec("DELETE FROM regstat.manifest_blob "+
-			"WHERE blob_digest = $1",
+		"WHERE blob_digest = $1",
 		digest)
 	tx.MustExec("DELETE FROM regstat.blobs "+
-			"WHERE digest = $1",
+		"WHERE digest = $1",
 		digest)
 	tx.Commit()
 	log.Println("delete blob", digest)
@@ -177,33 +179,33 @@ func (db Database) PullManifest(manifest *database.Manifest) {
 func (db Database) DeleteManifest(digest string) {
 	tx := db.conn.MustBegin()
 	tx.MustExec("INSERT INTO regstat.deleted_manifests "+
-			"SELECT digest, pushed, pulled, NOW() FROM regstat.manifests "+
-			"WHERE digest = $1 "+
-			"ON CONFLICT (digest) "+
-			"DO UPDATE SET "+
-			"deleted = NOW()",
+		"SELECT digest, pushed, pulled, NOW() FROM regstat.manifests "+
+		"WHERE digest = $1 "+
+		"ON CONFLICT (digest) "+
+		"DO UPDATE SET "+
+		"deleted = NOW()",
 		digest)
 	tx.MustExec("INSERT INTO regstat.deleted_tags "+
-			"SELECT name, registry, repository, tag, manifest_digest, pushed, pulled, NOW() FROM regstat.tags "+
-			"WHERE manifest_digest = $1 "+
-			"ON CONFLICT (name) "+
-			"DO UPDATE SET "+
-			"deleted = NOW()",
+		"SELECT name, registry, repository, tag, manifest_digest, pushed, pulled, NOW() FROM regstat.tags "+
+		"WHERE manifest_digest = $1 "+
+		"ON CONFLICT (name) "+
+		"DO UPDATE SET "+
+		"deleted = NOW()",
 		digest)
 	tx.MustExec("INSERT INTO regstat.deleted_manifest_blob "+
-			"SELECT manifest_digest, blob_digest FROM regstat.manifest_blob "+
-			"WHERE manifest_digest = $1 "+
-			"ON CONFLICT (manifest_digest, blob_digest) "+
-			"DO NOTHING",
+		"SELECT manifest_digest, blob_digest FROM regstat.manifest_blob "+
+		"WHERE manifest_digest = $1 "+
+		"ON CONFLICT (manifest_digest, blob_digest) "+
+		"DO NOTHING",
 		digest)
 	tx.MustExec("DELETE FROM regstat.tags "+
-			"WHERE manifest_digest = $1",
+		"WHERE manifest_digest = $1",
 		digest)
 	tx.MustExec("DELETE FROM regstat.manifest_blob "+
-			"WHERE manifest_digest = $1",
+		"WHERE manifest_digest = $1",
 		digest)
 	tx.MustExec("DELETE FROM regstat.manifests "+
-			"WHERE digest = $1",
+		"WHERE digest = $1",
 		digest)
 	tx.Commit()
 	log.Println("delete manifest", digest)

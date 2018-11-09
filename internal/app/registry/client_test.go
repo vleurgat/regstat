@@ -1,13 +1,14 @@
 package registry
 
 import (
-	"net/http"
-	"testing"
 	"errors"
-	"github.com/docker/cli/cli/config/configfile"
-	"strings"
-	"reflect"
 	"io/ioutil"
+	"net/http"
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/docker/cli/cli/config/configfile"
 )
 
 type testStruct struct {
@@ -16,7 +17,7 @@ type testStruct struct {
 
 func TestGetResponse(t *testing.T) {
 	t.Run("failure", func(t *testing.T) {
-		httpClient := CreateMockHttpClientErr(errors.New("oops"))
+		httpClient := CreateMockHTTPClientErr(errors.New("oops"))
 		client := Client{client: httpClient, dockerConfig: &configfile.ConfigFile{}}
 		req := &http.Request{}
 		res, err := client.getResponse(req, "auth")
@@ -30,7 +31,7 @@ func TestGetResponse(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		expectedResponse := http.Response{StatusCode: 200}
-		httpClient := CreateMockHttpClient(expectedResponse)
+		httpClient := CreateMockHTTPClient(expectedResponse)
 		client := Client{client: httpClient, dockerConfig: &configfile.ConfigFile{}}
 		req := &http.Request{}
 		res, err := client.getResponse(req, "auth")
@@ -64,7 +65,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("bad basic auth", func(t *testing.T) {
 		client := Client{
-			client:       CreateMockHttpClientErr(errors.New("boo")),
+			client:       CreateMockHTTPClientErr(errors.New("boo")),
 			dockerConfig: nil,
 		}
 		testObject := testStruct{}
@@ -79,7 +80,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("non-200, non-401 basic auth", func(t *testing.T) {
 		client := Client{
-			client:       CreateMockHttpClient(http.Response{StatusCode: 500}),
+			client:       CreateMockHTTPClient(http.Response{StatusCode: 500}),
 			dockerConfig: nil,
 		}
 		testObject := testStruct{}
@@ -94,7 +95,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("200 basic auth", func(t *testing.T) {
 		client := Client{
-			client: CreateMockHttpClient(http.Response{
+			client: CreateMockHTTPClient(http.Response{
 				StatusCode: 200,
 				Body:       ioutil.NopCloser(strings.NewReader("{\"name\":\"hello\"}")),
 			}),
@@ -111,7 +112,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("401 bearer auth error", func(t *testing.T) {
 		client := Client{
-			client:       CreateMockHttpClient(http.Response{StatusCode: 401}),
+			client:       CreateMockHTTPClient(http.Response{StatusCode: 401}),
 			dockerConfig: nil}
 		testObject := testStruct{}
 		err := client.getJSONFromURL("http://hello", &testObject)
@@ -125,7 +126,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("401 bearer bad url", func(t *testing.T) {
 		client := Client{
-			client: CreateMockHttpClient(http.Response{
+			client: CreateMockHTTPClient(http.Response{
 				StatusCode: 401,
 				Header: map[string][]string{
 					"Www-Authenticate": {
@@ -147,7 +148,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("500 from bearer token", func(t *testing.T) {
 		client := Client{
-			client: CreateMockHttpClient(
+			client: CreateMockHTTPClient(
 				http.Response{
 					StatusCode: 401,
 					Header: map[string][]string{
@@ -173,7 +174,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("bearer token success; 500 from auth", func(t *testing.T) {
 		client := Client{
-			client: CreateMockHttpClient(
+			client: CreateMockHTTPClient(
 				http.Response{
 					StatusCode: 401,
 					Header: map[string][]string{
@@ -202,7 +203,7 @@ func TestGetJSONFromURL(t *testing.T) {
 
 	t.Run("bearer auth success", func(t *testing.T) {
 		client := Client{
-			client: CreateMockHttpClient(
+			client: CreateMockHTTPClient(
 				http.Response{
 					StatusCode: 401,
 					Header: map[string][]string{

@@ -1,9 +1,9 @@
 package regstat
 
 import (
-				"testing"
 	"strings"
-	)
+	"testing"
+)
 
 func TestProcessRegistryRequest(t *testing.T) {
 	t.Run("empty body", func(t *testing.T) {

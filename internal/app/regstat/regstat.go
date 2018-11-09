@@ -10,9 +10,9 @@ import (
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/distribution/notifications"
 	_ "github.com/lib/pq" // import Postgres driver
-		"github.com/vleurgat/regstat/internal/app/docker"
-	"github.com/vleurgat/regstat/internal/app/registry"
 	"github.com/vleurgat/regstat/internal/app/database/postgres"
+	"github.com/vleurgat/regstat/internal/app/docker"
+	"github.com/vleurgat/regstat/internal/app/registry"
 )
 
 type server struct {

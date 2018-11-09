@@ -2,7 +2,7 @@ package mock
 
 import "github.com/vleurgat/regstat/internal/app/database"
 
-// Database: mock implementation of Database
+// Database is a mock implementation of Database
 type Database struct {
 	IsBlobRetValue     bool
 	IsManifestRetValue bool

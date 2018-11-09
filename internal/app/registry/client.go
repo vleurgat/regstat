@@ -5,38 +5,39 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/distribution/manifest/schema2"
-	"time"
-	"strconv"
-	)
+)
 
-// HttpClient acts as facade on http.Client, allowing for mock implementations.
-type HttpClient interface {
+// HTTPClient acts as facade on http.Client, allowing for mock implementations.
+type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// HttpClientImpl implements HttpClient, and acts as a facade on http.Client, implementing just the Do method.
-type HttpClientImpl struct {
-	realHttpClient *http.Client
+// HTTPClientImpl implements HTTPClient, and acts as a facade on http.Client, implementing just the Do method.
+type HTTPClientImpl struct {
+	realHTTPClient *http.Client
 }
 
 // Do sends an HTTP request and returns an HTTP response. This just calls the equivalent method on http.Client.
-func (h HttpClientImpl) Do(req *http.Request) (*http.Response, error) {
+func (h HTTPClientImpl) Do(req *http.Request) (*http.Response, error) {
 	log.Println("call to REAL http.Client.Do")
-	return h.realHttpClient.Do(req)
+	return h.realHTTPClient.Do(req)
 }
 
 // Client represents a HTTP client connection to a Docker registry.
 type Client struct {
-	client       HttpClient
+	client       HTTPClient
 	dockerConfig *configfile.ConfigFile
 }
 
-// CreateClientProvidingHttpClient create a Client object, using a real HttpClient implementation.
-func CreateClientProvidingHttpClient(httpClient HttpClient, dockerConfig *configfile.ConfigFile) Client {
+// CreateClientProvidingHTTPClient create a Client object, using a real HttpClient implementation.
+func CreateClientProvidingHTTPClient(httpClient HTTPClient, dockerConfig *configfile.ConfigFile) Client {
 	return Client{
-		client: httpClient,
+		client:       httpClient,
 		dockerConfig: dockerConfig,
 	}
 }
@@ -44,8 +45,8 @@ func CreateClientProvidingHttpClient(httpClient HttpClient, dockerConfig *config
 // CreateClient create a Client object using the provided HttpClient implementation
 func CreateClient(dockerConfig *configfile.ConfigFile) Client {
 	return Client{
-		client: HttpClientImpl{
-			realHttpClient: &http.Client{Timeout: 10 * time.Second},
+		client: HTTPClientImpl{
+			realHTTPClient: &http.Client{Timeout: 10 * time.Second},
 		},
 		dockerConfig: dockerConfig,
 	}
