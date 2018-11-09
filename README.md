@@ -1,10 +1,10 @@
 # RegStat - persisting Docker registry notifications
 
 The v2 Docker registry (also known as [Docker distribution](https://github.com/docker/distribution)) can be
-configured to notify via a webhook whenever any events (push, pull, delete) that occur in it.
+configured to notify via a webhook whenever any events (push, pull, delete) occur.
 
-This simple application is designed to act as a server for those webhooks, parse the webhook JSON body
-and then persist details of a registry's activity into a Postgres database.
+This simple application is designed to act as a server for those webhooks, parsing the webhook JSON body
+and then persisting details of a registry's activity into a Postgres database.
 
 The contents of the database can then be queried to determine interesting facts about the objects in the
 registry, facts that are not easy to astertain directly from the registry itself.
@@ -22,7 +22,7 @@ For instance ...
 ## Database schema
 
 RegStat expects to be provided with a connection to a Postgres database. Any modern Postgres version should
-do. It's been tested with 9.5 and 10. 3.
+do. It's been tested with 9.5 and 10.3.
 
 On start up RegStat will attempt to create a `regstat` schema and the following tables in that schema, if
 they don't already exist ...
