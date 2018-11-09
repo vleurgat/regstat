@@ -148,5 +148,5 @@ notifications:
 
 ````
 $ go get github.com/vleurgat/regstat/cmd/regstat
-$ CGO_ENABLED=0 go install -i -a -ldflags '-extldflags "-static"' github.com/vleurgat/regstat/cmd/regstat
+$ CGO_ENABLED=0 go install -a -ldflags '-extldflags "-static"' github.com/vleurgat/regstat/cmd/regstat
 ````
