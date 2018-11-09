@@ -36,7 +36,7 @@ tags | name, registry, repository, tag, manifest_digest, pushed, pulled | list o
 deleted_blobs | digest, pushed, pulled, deleted | list of deleted blobs in the registry 
 deleted_manifests | digest, pushed, pulled, deleted | list of deleted manifests in the registry
 deleted_manifest_blob | manifest_digest, blob_digest, deleted | join table, linking deleted manifests to their deleted blobs
-deleted_tags | name, registry, repository, tag, manifest_digest, pushed, pulled, deleted | list of deleted tags in the registry and the delete manifests that they represent
+deleted_tags | name, registry, repository, tag, manifest_digest, pushed, pulled, deleted | list of deleted tags in the registry and the deleted manifests that they represent
 
 The `blobs`, `manifests` and `tags` tables, and the `deleted_` equivalents, all contain `pushed` and `pulled` timestamp fields, which contain the time
 of the most recent push or pull event that affected that object.
