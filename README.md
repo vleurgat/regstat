@@ -47,6 +47,41 @@ intended to act as an audit trail for deletion events.
 
 ## Running RegStat
 
+### Docker
+
+Quick and easy means to get RegStat going.
+
+This starts a Postges database in a container and RegStat in another container. The RegStat server is listening on port 3333. Postgres is accessible as user "postgres" with no password on port 5432.
+
+Obviously, for any semi-serious use, you'll want to use a Postgres database backed by reliable storage and likely add more options to the Regstat command line.
+
+````
+$ docker run -d --name=regstat-postgres -e POSTGRES_PASSWORD='' -p 5432:5432 postgres:10
+$ docker run -d --name=regstat --net=host vleurgat/regstat:latest
+````
+
+(Note that the `--net=host` option is important. It allows the `regstat` container to connect to the `regstat-postgres` one as `localhost:5432`. There are other, better, ways to link these containers, but this works well enough for a simple example.)
+
+You can supply extra RegStat args on the end of the second `docker run` command ...
+
+````
+$ docker run -d --name=regstat --net=host vleurgat/regstat:latest -port 4444
+$ docker logs regstat
+1970/01/01 22:34:45 Server now listening on :4444
+````
+
+Also, for example, adding config files via a volume and additional arguments ...
+
+````
+$ docker run -d --name=regstat --net=host \
+  -v $HOME/cfgfiles:/cfgfiles \
+  vleurgat/regstat:latest \
+  -docker-config /cfgfiles/config.json \
+  -equiv-registries /cfgfiles/equiv-registries.json
+````
+
+### Command line
+
 ````
 $ regstat -h
 Usage of regstat:
@@ -60,21 +95,14 @@ Usage of regstat:
     	the port number to listen on (default "3333")
 ````
 
-At a minimum RegStat needs one argument ...
+At a minimum RegStat takes up to four arguments ...
 
-* the Postgres connection string, provided using the `-pg-conn-str` option 
-
-For example ... 
-
-    $ regstat -pg-conn-str "host=localhost port=5432 user=regstat password=regstat dbname=regstat sslmode=disable"
+* the port number to listen on, provided using the `-port` option, defaults to 3333
+* the Postgres connection string, provided using the `-pg-conn-str` option, defaults to "locahost:5432" as user "postgres" with no password
+* registry authorization details, via a Docker `config.json` file, using the `-docker-config` option, defaults to none
+* an equivalent registries file, see *Equivalent registries* below, using the `-equiv-registries` option, defaults to none
 
 Note, be sure to quote the Postgres connection string.
-
-Three other options can be provided ...
-
-* the port number to listen on, provided using the `-port` option, the default is 3333
-* registry authorization details, via a Docker `config.json` file, using the `-docker-config` option
-* an equivalent registries file, see *Equivalent registries* below, using the `-equiv-registries` option
 
 A full example ...
 ````
