@@ -119,7 +119,7 @@ contents of that manifest. This allows RegStat to determine which blobs the mani
 that information via the `manifest_blob` table.
 
 If the registry requires the GET connection to be authorized then you must use the `-docker-config` option to
-provide the path to a Docker `config.json` file that lists the appropriate authorization tokens for the
+provide the path to a Docker `config.json` file that lists the appropriate authorization details for the
 registry.
 
 RegStat supports both basic and brearer/token authorization methods.
@@ -156,7 +156,7 @@ mapped to `another_registry`.
 
 ## Configuring the Docker registry to notify RegStat
 
-See the Docker documentation: [work with notifications](https://docs.docker.com/registry/notifications/)
+See the Docker documentation: [work with notifications](https://docs.docker.com/registry/notifications/).
 
 Currently RegStat does not require any authorization tokens and listens on a HTTP port, rather than HTTPS.
 
