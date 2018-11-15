@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // import Postgres driver
 	"github.com/vleurgat/regstat/internal/app/database"
 )
 
@@ -25,6 +26,11 @@ func CreateDatabase(pgConnStr string) database.Database {
 	return Database{
 		conn: conn,
 	}
+}
+
+// GetConnection returns the database connection.
+func (db Database) GetConnection() *sqlx.DB {
+	return db.conn
 }
 
 // CreateSchemaIfNecessary does what it says on the tin.

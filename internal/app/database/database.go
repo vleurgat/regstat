@@ -1,6 +1,10 @@
 package database
 
-import "time"
+import (
+	"time"
+
+	"github.com/jmoiron/sqlx"
+)
 
 // Blob representation in the database.
 type Blob struct {
@@ -34,6 +38,7 @@ type Tag struct {
 
 // Database operations.
 type Database interface {
+	GetConnection() *sqlx.DB
 	CreateSchemaIfNecessary()
 	IsBlob(digest string) bool
 	PushBlob(blob *Blob)

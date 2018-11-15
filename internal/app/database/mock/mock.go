@@ -1,6 +1,9 @@
 package mock
 
-import "github.com/vleurgat/regstat/internal/app/database"
+import (
+	"github.com/jmoiron/sqlx"
+	"github.com/vleurgat/regstat/internal/app/database"
+)
 
 // Database is a mock implementation of database.Database
 type Database struct {
@@ -28,6 +31,11 @@ func CreateDatabase() Database {
 		DeletedBlobs:     &[]string{},
 		DeletedManifests: &[]string{},
 	}
+}
+
+// GetConnection always returns nil.
+func (db Database) GetConnection() *sqlx.DB {
+	return nil
 }
 
 // CreateSchemaIfNecessary does what it says on the tin.
