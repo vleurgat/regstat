@@ -6,7 +6,7 @@ import (
 
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
-	"github.com/vleurgat/dockerclient/pkg/dockerclient"
+	"github.com/vleurgat/dockerclient/pkg/client"
 	"github.com/vleurgat/regstat/internal/app/database"
 	"github.com/vleurgat/regstat/internal/app/registry"
 )
@@ -23,7 +23,7 @@ type Workflow interface {
 // should be intrepreted and persisted. It implements the Workflow interface.
 type WorkflowImpl struct {
 	db     database.Database
-	client dockerclient.Client
+	client client.Client
 	eqr    *registry.EquivRegistries
 }
 

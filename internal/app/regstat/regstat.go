@@ -9,9 +9,9 @@ import (
 
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/distribution/notifications"
-	"github.com/vleurgat/dockerclient/pkg/dockerclient"
+	"github.com/vleurgat/dockerclient/pkg/client"
+	"github.com/vleurgat/dockerclient/pkg/config"
 	"github.com/vleurgat/regstat/internal/app/database/postgres"
-	"github.com/vleurgat/regstat/internal/app/docker"
 	"github.com/vleurgat/regstat/internal/app/registry"
 )
 
@@ -25,7 +25,7 @@ func newServer(port string, pgConnStr string, dockerConfig *configfile.ConfigFil
 	s.httpServer = &http.Server{Addr: ":" + port, Handler: http.HandlerFunc(s.handle)}
 	db := postgres.CreateDatabase(pgConnStr)
 	db.CreateSchemaIfNecessary()
-	client := dockerclient.CreateClient(dockerConfig)
+	client := client.CreateClient(dockerConfig)
 	s.workflow = WorkflowImpl{db: db, client: client, eqr: equivRegistries}
 	return &s
 }
@@ -83,7 +83,7 @@ func (s *server) processRegistryRequest(body []byte) error {
 func Regstat(port string, pgConnStr string, dockerConfigFile string, equivRegistriesFile string) {
 	log.Println("start regstat")
 
-	dockerConfig, err := docker.CreateConfig(dockerConfigFile)
+	dockerConfig, err := config.CreateConfig(dockerConfigFile)
 	if err != nil {
 		log.Fatalln("failed to process docker config file", dockerConfigFile)
 	}
