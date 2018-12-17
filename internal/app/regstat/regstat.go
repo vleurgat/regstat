@@ -9,6 +9,7 @@ import (
 
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/distribution/notifications"
+	"github.com/vleurgat/dockerclient/pkg/dockerclient"
 	"github.com/vleurgat/regstat/internal/app/database/postgres"
 	"github.com/vleurgat/regstat/internal/app/docker"
 	"github.com/vleurgat/regstat/internal/app/registry"
@@ -24,7 +25,7 @@ func newServer(port string, pgConnStr string, dockerConfig *configfile.ConfigFil
 	s.httpServer = &http.Server{Addr: ":" + port, Handler: http.HandlerFunc(s.handle)}
 	db := postgres.CreateDatabase(pgConnStr)
 	db.CreateSchemaIfNecessary()
-	client := registry.CreateClient(dockerConfig)
+	client := dockerclient.CreateClient(dockerConfig)
 	s.workflow = WorkflowImpl{db: db, client: client, eqr: equivRegistries}
 	return &s
 }

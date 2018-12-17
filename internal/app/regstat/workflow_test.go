@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/docker/distribution/notifications"
+	"github.com/vleurgat/dockerclient/pkg/dockerclient"
 	"github.com/vleurgat/regstat/internal/app/database/mock"
 	"github.com/vleurgat/regstat/internal/app/registry"
 )
@@ -190,11 +191,11 @@ func TestProcessPush(t *testing.T) {
 	t.Run("manifest no enrichment", func(t *testing.T) {
 		db := mock.CreateDatabase()
 		eqr := registry.EquivRegistries{}
-		httpClient := registry.CreateMockHTTPClientErr(errors.New("oops"))
+		httpClient := dockerclient.CreateMockHTTPClientErr(errors.New("oops"))
 		wf := WorkflowImpl{
 			db:     db,
 			eqr:    &eqr,
-			client: registry.CreateClientProvidingHTTPClient(httpClient, nil),
+			client: dockerclient.CreateClientProvidingHTTPClient(httpClient, nil),
 		}
 		event := createEvent(t, fmt.Sprintf(
 			"{\"target\":{\"tag\":\"hoo\", \"digest\":\"boo\", \"mediaType\":\"application/vnd.docker.distribution.manifest.v2+json\"}, \"timestamp\":\"%s\"}",
@@ -223,14 +224,14 @@ func TestProcessPush(t *testing.T) {
 	t.Run("manifest with enrichment", func(t *testing.T) {
 		db := mock.CreateDatabase()
 		eqr := registry.EquivRegistries{}
-		httpClient := registry.CreateMockHTTPClient(http.Response{
+		httpClient := dockerclient.CreateMockHTTPClient(http.Response{
 			StatusCode: 200,
 			Body:       ioutil.NopCloser(strings.NewReader("{\"config\":{\"digest\": \"123456\"}}")),
 		})
 		wf := WorkflowImpl{
 			db:     db,
 			eqr:    &eqr,
-			client: registry.CreateClientProvidingHTTPClient(httpClient, nil),
+			client: dockerclient.CreateClientProvidingHTTPClient(httpClient, nil),
 		}
 		event := createEvent(t, fmt.Sprintf(
 			"{\"target\":{\"tag\":\"hoo\", \"url\":\"http://hello\", \"digest\":\"boo\", \"mediaType\":\"application/vnd.docker.distribution.manifest.v2+json\"}, \"timestamp\":\"%s\"}",
